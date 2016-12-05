@@ -1,0 +1,193 @@
+---
+title: "Kursovaya_rabota"
+author: "Bachchaeva Kristina"
+date: '6 декабря 2016 г '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 2.2 Значения описательных статистик по каждой переменной
+```{r}
+ summary(R13$floor)
+ summary(R13$growth)
+ summary(R13$age)
+ summary(R13$SW)
+ summary(R13$calories)
+ summary(R13$proteins)
+ summary(R13$fats)
+ summary(R13$carboh.)
+ summary(R13$TV)   
+ summary(R13$RW)
+```
+
+## Диагностические диаграммы по каждой переменной
+```{r}
+ boxplot(R13$floor)
+ boxplot(R13$growth)
+ boxplot(R13$age)
+ boxplot(R13$SW)
+ boxplot(R13$calories)
+ boxplot(R13$proteins)
+ boxplot(R13$fats)
+ boxplot(R13$carboh.)
+ boxplot(R13$TV)
+ boxplot(R13$RW)
+ hist(R13$proteins)
+ hist(R13$RW)
+```
+
+## Корреляционная матрица
+```{r}
+ library(corrgram)
+ corrgram(R13, lower.panel=panel.shade,
++          upper.panel=NULL, text.panel=panel.txt)
+```
+
+## Матрица диаграммы рассеивания
+```{r}
+ library(car)
+ scatterplotMatrix(R13, spread=FALSE, lty.smooth=2)
+```
+
+## Визуальный анализ данных 
+```{r}
+fit<-lm(RW ~ growth + age + SW + calories + proteins + fats + carboh. + TV , data=R13)
+vif(fit) 
+sqrt(vif(fit))2
+
+fit1<-lm(RW ~ growth + age + carboh. + TV, data=R13)
+vif(fit1)
+sqrt(vif(fit1))2
+```
+
+## 3.1 Оценка модели линейной регрессии 
+```{r}
+fit<-lm(RW ~ growth + age + SW + calories + proteins + fats + carboh. + TV, data=R31)
+summary(fit)
+fit<-lm(RW ~ growth + SW + calories + TV, data=R31)
+summary(fit)
+```
+
+## 3.2 Графики остатков
+```{r}
+rstud<-rstandard(fit)
+rjack<-rstudent(fit)
+par(mfrow=c(2,2))
+plot(fit$res,ylab="raw residuals")
+plot(rstud,ylab="studentized residuals")
+plot(rjack,ylab="jacknife residuals")
+```
+
+## Диаграмма Q-Q plot
+```{r}
+qqPlot(fit)
+```
+
+## Тест Бонферрони на выбросы
+```{r}
+outlierTest(fit)
+```
+
+## Диаграмма расстояния Кука
+```{r}
+cutoff <- 4/(nrow(R13)-length(fit$coefficients)-2)
+plot(fit, which=4, cook.levels=cutoff)
+abline(h=cutoff, lty=2, col="green")
+```
+
+## Диаграмма добавленных переменных
+```{r}
+avPlots(fit, ask=FALSE, onepage=TRUE, id.method="identify")
+```
+
+## Диаграмма значений показателя влияния
+```{r}
+hat.plot<-function(fit) {
+  p<-length(coefficients(fit))
+  n<-length(fitted(fit))
+  plot(hatvalues(fit),main="Диаграмма значений показателя влияния")
+   abline(h=c(2,3)*p/n,col="green",lty=2)
+  identify(1:n, hatvalues(fit), names(hatvalues(fit)))}
+hat.plot(fit)
+```
+
+## Диаграмма влияния
+```{r}
+influencePlot(fit, id.method="identify", main="Диаграмма влияния", sub="Размер круга пропорционален расстоянию Кука")
+```
+
+## 3.3 Тест Уайта
+```{r}
+ncvTest(fit)
+```
+
+## Тест Голдфельдта-Квандта 
+```{r}
+gqtest(fit)
+```
+
+## Тест Дарбина- Уотсона
+```{r}
+durbinWatsonTest(fit)
+```
+
+## Тест Бройша-Годфри
+```{r}
+bgtest(fit)
+```
+
+## Диаграмма qqPlot
+```{r}
+qqPlot(fit, labels=row.names(states), id.method="identify", simulate=TRUE, main="Q-Q Plot")
+```
+
+## 3.4 Диаграмма частных остатков
+```{r}
+crPlots(fit)
+```
+
+## Проверка необходимости преобразования Бокса-Кокса к нормальному виду
+```{r}
+summary(powerTransform(R13$RW))
+summary(powerTransform(R13.1$RW))
+```
+
+## Выбор «лучшей» регрессионной модели. Сравнение вложенных моделей
+```{r}
+fit1<-lm(RW~growth+age+SW+calories+proteins+fats+carboh.+TV, data = R31)
+fit2<-lm(RW~growth+SW+calories+TV, data=R31)
+anova(fit2,fit1)
+```
+
+## Другой способ сравнения моделей
+```{r}
+AIC(fit1, fit2)
+```
+
+## Пошаговая регрессия 
+```{r}
+stepAIC(fit1,direction="backward")
+```
+
+## Диаграмма регрессии по подмножествам
+```{r}
+library(leaps)
+leaps <-regsubsets(RW~growth+age+SW+calories+proteins+fats+carboh.+TV, data = R31)
+plot(leaps, scale="adjr2")
+```
+
+## Статистика Мэллоуса
+```{r}
+subsets(leaps, statistic="cp", main="Статистика Мэллоуса")
+abline(1,1,lty=2,col="green")
+```
+
+## 3.5 Сравнение стандартизованных коэффициентов регрессии
+```{r}
+r31<-as.data.frame(scale(R31))
+zfit<-lm(RW~growth+age+SW+calories+proteins+fats+carboh.+TV, data =r31)
+coef(zfit)
+```
